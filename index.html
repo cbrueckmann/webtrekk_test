@@ -1,0 +1,64 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Userdata</title>
+
+  <!-- I would prefer protocoll-less urls, but seems as it does not work with file:// base urls-->
+  <link href="stylesheets/bootstrap.css" media="all" rel="stylesheet" type="text/css" />
+  <link href="stylesheets/application.css" media="all" rel="stylesheet" type="text/css" />
+  <link href="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.0/css/bootstrap-combined.min.css" rel="stylesheet">
+
+  <!-- add scripts to head, content is rendered by Angular anyway so it doesn't matter, and: it's recommended -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.0.8/angular.min.js"></script>
+  <script src="http://angular-ui.github.com/bootstrap/ui-bootstrap-tpls-0.1.0.js"></script>
+  <script src="javascripts/storage.js"></script>
+  <script src="javascripts/data.js"></script>
+  <script src="javascripts/helpers.js"></script>
+  <script src="javascripts/users_controller.js"></script>
+  
+</head>
+<body ng-app="TestApp">
+<div ng-controller="UserController" class="container">
+  <header ng-bind="header"></header>
+  
+  <p>
+    <button id="addNewUserBtn" class="btn" ng-click="showNewCustomerForm()">Add new Customer</button> 
+  </p>
+
+  <table class="table table-striped table-bordered">
+    <tr>
+      <!-- better generate table header automatically. 
+        Thoughts:
+          <th ng-repeat="key in userData[0]">{{key}}</th>
+        with some kind of mapping, or:
+          provide a titles array stored in DB/localStorage
+      -->
+      <th>Customer ID</th>
+      <th>First Name</th>
+      <th>Last Name</th>
+      <th>Age</th>
+      <th>Gender</th>
+      <th>Actions</th>
+    </tr>
+    <!-- use of ng-bind instead of curlies prevents flickering -->
+    <tr ng-repeat="user in userData | orderBy:'-last_contact'">
+      <td ng-bind="user.customer_id"></td>
+      <td ng-bind="user.first_name"></td>
+      <td ng-bind="user.last_name"></td>
+      <!--<td ng-bind="user.last_contact"></td>-->
+      <td ng-bind="calculateAgeByBirthdate(user.birthday)"></td>
+      <td ng-bind="user.gender"></td>
+      <td>
+        <!-- TODO: take care of active/inactive state  -->
+        <button class="btn btn-sm" ng-click="showEditCustomerForm(user)">Edit</button>
+        <button class="btn btn-sm" ng-click="removeUser(user)">Delete</button>
+        <button class="btn btn-sm" ng-click="showNaviForCustomer(user)">Navi</button>
+      </td>
+    </tr>
+  </table>
+</div>
+
+</body>
+</html>

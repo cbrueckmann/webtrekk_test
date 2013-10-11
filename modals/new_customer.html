@@ -1,0 +1,36 @@
+<div class="modal-header">
+  <h3>Add new Customer</h1>
+</div>
+<div class="modal-body">
+  <form name="newUserForm">
+    <ul>
+      <li>
+        <label for="edit_customer_id">Customer ID</label>
+        <span>{{item.customer_id}}</span>
+      </li>
+      <li>
+        <label for="edit_first_name">First Name</label>
+        <input type="text" id="edit_first_name" name="edit_first_name" ng-model="item.first_name" required>
+      </li>
+      <li>
+        <label for="edit_last_name">Last Name</label>
+        <input type="text" id="edit_last_name" name="edit_last_name" ng-model="item.last_name" required>
+      </li>
+      <li>
+        <label for="edit_birthday">Birthday</label>
+        <input type="text" id="edit_birthday" name="edit_birthday" placeholder="(yyyy-mm-dd)" ng-model="item.birthday" ng-pattern="/^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$/" required>
+      </li>
+      <li>
+        <label for="edit_gender">Gender</label>
+        <select id="edit_gender" name="edit_gender" ng-model="item.gender" required>
+          <option value="w">Female</option>
+          <option value="m">Male</option>
+        </select>
+      </li>
+    </ul>
+  </form>
+</div>
+<div class="modal-footer">
+  <button class="btn btn-sm btn-left" ng-click="close()">Back to overview</button>
+  <button ng-click="addCustomer()" class="btn btn-primary" ng-disabled="!newUserForm.$valid">Save</button>
+</div>
