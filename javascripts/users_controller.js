@@ -71,7 +71,6 @@ app.controller('UserController', function ($scope, dataService, $dialog) {
       controller: 'ShowCtrl',
       template: $('#modal-template-show').html(),
       //templateUrl: 'modals/show_customer.html',
-      scope: $Scope,
       resolve: {item: itemToShow}
     }).open();
   };
