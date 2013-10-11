@@ -68,9 +68,11 @@ app.controller('UserController', function ($scope, dataService, $dialog) {
     var itemToShow = customer;
 
     $dialog.dialog({
-      controller: 'showCtrl',
-      templateUrl: 'modals/show_customer.html',
-      resolve: {item: angular.copy(itemToShow)}
+      controller: 'ShowCtrl',
+      template: $('#modal-template-show').html(),
+      //templateUrl: 'modals/show_customer.html',
+      scope: $Scope,
+      resolve: {item: itemToShow}
     }).open();
   };
 
@@ -79,8 +81,9 @@ app.controller('UserController', function ($scope, dataService, $dialog) {
     var itemToAdd = {customer_id: $scope.nextCustomerId};
     
     $dialog.dialog({
-      controller: 'newCtrl',
-      templateUrl: 'modals/new_customer.html',
+      controller: 'NewCtrl',
+      template: $('#modal-template-new').html(),
+      //templateUrl: 'modals/new_customer.html',
       resolve: {item: itemToAdd}
     })
     .open()
@@ -105,7 +108,8 @@ app.controller('UserController', function ($scope, dataService, $dialog) {
     
     $dialog.dialog({
         controller: 'EditCtrl',
-        templateUrl: 'modals/edit_customer.html',
+        template: $('#modal-template-edit').html(),
+        //templateUrl: 'modals/edit_customer.html',
         resolve: {item: angular.copy(itemToEdit)}
       })
       .open()
@@ -134,6 +138,11 @@ app.controller('UserController', function ($scope, dataService, $dialog) {
   // provide age calculation inside scope, but use globally available helper
   $scope.calculateAgeByBirthdate = function (birthD) {
     return calculateAgeByBirthdate(birthD);
+  };
+
+  // Translate short version of gender to human readable
+  $scope.translateGender = function (gender) {
+    return {w: 'Female', m: 'Male'}[gender] || gender;
   };
 
   // available id for new customers
@@ -165,7 +174,7 @@ app.controller('UserController', function ($scope, dataService, $dialog) {
 
 // CRU(D) Controllers for modal dialogs
 // better with modal directive?
-app.controller('newCtrl', function ($scope, item, dialog) { 
+app.controller('NewCtrl', function ($scope, item, dialog) { 
   
   $scope.item = item;
   
@@ -190,7 +199,7 @@ app.controller('EditCtrl', function ($scope, item, dialog) {
   };
 });
 
-app.controller('showCtrl', function ($scope, item, dialog) { 
+app.controller('ShowCtrl', function ($scope, item, dialog) { 
   
   $scope.item = item;
 

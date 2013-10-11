@@ -8,6 +8,9 @@ header{
   font-size: 150%;
 }
 
+#modal-templates{
+  display: none;
+}
 .modal-body ul{
   margin: 0;
 }
