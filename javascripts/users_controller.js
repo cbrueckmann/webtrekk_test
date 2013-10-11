@@ -68,7 +68,7 @@ app.controller('UserController', function ($scope, dataService, $dialog) {
     var itemToShow = customer;
 
     $dialog.dialog({
-      controller: 'showCtrl',
+      controller: 'ShowCtrl',
       templateUrl: 'modals/show_customer.html',
       resolve: {item: angular.copy(itemToShow)}
     }).open();
@@ -79,7 +79,7 @@ app.controller('UserController', function ($scope, dataService, $dialog) {
     var itemToAdd = {customer_id: $scope.nextCustomerId};
     
     $dialog.dialog({
-      controller: 'newCtrl',
+      controller: 'NewCtrl',
       templateUrl: 'modals/new_customer.html',
       resolve: {item: itemToAdd}
     })
@@ -136,6 +136,11 @@ app.controller('UserController', function ($scope, dataService, $dialog) {
     return calculateAgeByBirthdate(birthD);
   };
 
+  // Translate short version of gender to human readable
+  $scope.translateGender = function (gender) {
+    return {w: 'Female', m: 'Male'}[gender] || gender;
+  };
+
   // available id for new customers
   $scope.nextCustomerId = 0;
 
@@ -165,7 +170,7 @@ app.controller('UserController', function ($scope, dataService, $dialog) {
 
 // CRU(D) Controllers for modal dialogs
 // better with modal directive?
-app.controller('newCtrl', function ($scope, item, dialog) { 
+app.controller('NewCtrl', function ($scope, item, dialog) { 
   
   $scope.item = item;
   
@@ -190,7 +195,7 @@ app.controller('EditCtrl', function ($scope, item, dialog) {
   };
 });
 
-app.controller('showCtrl', function ($scope, item, dialog) { 
+app.controller('ShowCtrl', function ($scope, item, dialog) { 
   
   $scope.item = item;
 

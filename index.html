@@ -49,7 +49,7 @@
       <td ng-bind="user.last_name"></td>
       <!--<td ng-bind="user.last_contact"></td>-->
       <td ng-bind="calculateAgeByBirthdate(user.birthday)"></td>
-      <td ng-bind="user.gender"></td>
+      <td ng-bind="translateGender(user.gender)"></td>
       <td>
         <!-- TODO: take care of active/inactive state  -->
         <button class="btn btn-sm" ng-click="showEditCustomerForm(user)">Edit</button>
