@@ -2,29 +2,101 @@
 
 var app = angular.module("TestApp", ['ui.bootstrap']);
 
+// service to inject navigation data into customer
+// TODO: generalize to inject any kind of table into another
+app.service('navigationInjector', function () {
+  var navigationData;
+  navigationData = $storage('navigationData').get();
+
+  // get the navigation data for given user
+  var getNaviOfCustomer = function (customer_id) {
+    var userNavigationData = $.map(navigationData, function (data) {
+      if (data.customer_id === customer_id) {
+        return data;
+      }
+      else {
+        return [];
+      }
+    });
+    return userNavigationData;
+  };
+  
+  // not really sure if this step is necessairy or if a relation could be accomplished in a different way...
+  // walk through each customer, get NavigationData from separate table and inject it to userData
+  var injectNavigationDataToCustomer = function (userData) {
+    $.each(userData, function (i, customer) {
+      var customer_id = customer.customer_id;
+      var customerNavigation = getNaviOfCustomer(customer_id);
+
+      customer = $.extend({}, customer, {navigation: customerNavigation});
+      userData[i] = customer;
+      //saveData();
+    });
+    return userData;
+  };
+
+  return {
+    inject: injectNavigationDataToCustomer,
+    getNavi: getNaviOfCustomer
+  };
+});
+
 // service for data management (localStorage in this case)
 // TODO: check if localStorage && JSON is present here or provide a fallback
-app.service('dataService', function () {
-  
-  this.get = function (data) {
-    return {
-      userData: $storage('userData').get(),
-      navigationData: $storage('navigationData').get()
-    }[data] || [];
+app.service('dataService', ['navigationInjector', function (navigationInjector) {
+  var userData;
+
+  // init Data
+  userData = $storage('userData').get(); 
+  userData = navigationInjector.inject(userData);
+
+  this.get = function () {
+    return userData;
   };
 
   this.set = function (key, data) {
     $storage(key).set(data);
   };
+}]);
+
+// Translate short version of gender to human readable
+app.service('genderMap', function () {
+  //return {w: 'Female', m: 'Male'}[gender] || gender;
+  this.map = function (gender) {
+    return {w: 'Female', m: 'Male'}[gender] || gender;
+  };
 });
 
-app.controller('UserController', function ($scope, dataService, $dialog) {
+// determine the next Id for a given key in an array of objects 
+// value of obj.key must be integer
+// note: after adding a user, $scope.nextCustomerId is just incremented
+// could also use underscore _.max(), but would be too much overhead
+app.service('getNextId', function () {
+  this.get = function (data, key) {
+    var sortArray = angular.copy(data);
+    var nextId, maxId;
+
+    if (sortArray.length > 0) {
+      sortArray.sort(function (a, b) {
+        return sortArrayObject(key)(a, b);
+      });
+      maxId = sortArray[sortArray.length - 1]['customer_id'];
+  
+      nextId = (maxId + 1);
+    }
+    else {
+      nextId = 1;
+    }
+
+    return nextId;
+  }
+});
+
+app.controller('UserController', function ($scope, dataService, genderMap, getNextId, $dialog) {
   $scope.header = "Customer Overview";
   
-  // In a real application we would use a service for retrieving data
-  // import data from localStorage
-  $scope.userData = dataService.get('userData'); 
-  $scope.navigationData = dataService.get('navigationData');
+  // import data from dataService
+  $scope.userData = dataService.get(); 
 
   // store back to database (localstorage)
   // In real world we would first send a request to the server
@@ -34,35 +106,6 @@ app.controller('UserController', function ($scope, dataService, $dialog) {
     dataService.set('userData', $scope.userData)
   };
   
-  // get the navigation data for given user - only once
-  var getNaviOfCustomer = function (customer_id) {
-    var userNavigationData = $.map($scope.navigationData, function (data) {
-      if (data.customer_id === customer_id) {
-        return data;
-      }
-    });
-    return userNavigationData;
-  };
-
-  // not really sure if this step is necessairy or if a relation could be accomplished in a different way...
-  // walk through each customer, get NavigationData from separate table and inject it to userData
-  // testable when not in $scope?
-  // consider factory
-  var injectNavigationDataToCustomer = function () {
-    $.each($scope.userData, function (i, customer) {
-      var customer_id = customer.customer_id;
-      var customerNavigation = getNaviOfCustomer(customer_id);
-
-      customer = $.extend({}, customer, {navigation: customerNavigation});
-      $scope.userData[i] = customer;
-      saveData();
-    });
-  };
-
-  // prepare data once. Testable? consider prototype
-  // better: use factory!
-  injectNavigationDataToCustomer();
-
   // Customer detail dialog
   $scope.showNaviForCustomer = function (customer) {
     var itemToShow = customer;
@@ -97,6 +140,7 @@ app.controller('UserController', function ($scope, dataService, $dialog) {
   $scope.addCustomer = function (customer) {
     if (customer) {
       $scope.userData.push(customer);
+      $scope.nextCustomerId += 1;
       saveData();
     }
   };
@@ -121,7 +165,6 @@ app.controller('UserController', function ($scope, dataService, $dialog) {
     });
   };
 
-  // remove user from scope
   $scope.removeUser = function (user) {
     // HA! Nearly fell for that one :)
     // when the list in the view is ordered by orderBy filter, the index won't match anymore
@@ -134,41 +177,14 @@ app.controller('UserController', function ($scope, dataService, $dialog) {
     saveData();
   };
   
-  // provide age calculation inside scope, but use globally available helper
-  $scope.calculateAgeByBirthdate = function (birthD) {
-    return calculateAgeByBirthdate(birthD);
-  };
+  // provide age calculation service to scope
+  $scope.calculateAgeByBirthdate = calculateAgeByBirthdate;
 
-  // Translate short version of gender to human readable
-  $scope.translateGender = function (gender) {
-    return {w: 'Female', m: 'Male'}[gender] || gender;
-  };
+  // provide genderMap service to $scope
+  $scope.translateGender = genderMap.map;
 
-  // available id for new customers
-  $scope.nextCustomerId = 0;
-
-  // determine the next Id for a new user
-  // needs to be called once only
-  // after adding a user, $scope.nextCustomerId is just incremented
-  // could also use underscore _.max(), but would be too much overhead
-  // TODO: make sure it's testable (prototyped?)
-  var setNextCustomerId = function () {
-    var sortArray = angular.copy($scope.userData);
-    if (sortArray.length > 0) {
-      sortArray.sort(function (a, b) {
-        return sortArrayObject('customer_id')(a,b);
-      });
-      var maxId = sortArray[sortArray.length - 1]['customer_id'];
-  
-      //finally set the next available ID for new customers
-      $scope.nextCustomerId = (maxId + 1);
-    }
-    else {
-      $scope.nextCustomerId = 1;
-    }
-  };
-  
-  setNextCustomerId();
+  // set initial available id for new customers by using getNextId service
+  $scope.nextCustomerId = getNextId.get($scope.userData, 'customer_id');
 });
 
 // CRU(D) Controllers for modal dialogs
