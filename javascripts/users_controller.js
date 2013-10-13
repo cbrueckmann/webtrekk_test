@@ -60,7 +60,7 @@ app.service('getNextId', function () {
       sortArray.sort(function (a, b) {
         return sortArrayObject(key)(a, b);
       });
-      maxId = sortArray[sortArray.length - 1]['customer_id'];
+      maxId = sortArray[sortArray.length - 1][key];
   
       nextId = (maxId + 1);
     }
