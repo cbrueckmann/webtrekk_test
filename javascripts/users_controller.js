@@ -111,9 +111,9 @@ app.controller('UserController', function ($scope, dataService, genderMap, getNe
     var itemToShow = customer;
 
     $dialog.dialog({
-      controller: 'ShowCtrl',
+      controller: 'ModalCtrl',
       templateUrl: 'modals/show_customer.html',
-      resolve: {item: angular.copy(itemToShow)}
+      resolve: {item: itemToShow}
     }).open();
   };
 
@@ -122,7 +122,7 @@ app.controller('UserController', function ($scope, dataService, genderMap, getNe
     var itemToAdd = {customer_id: $scope.nextCustomerId};
     
     $dialog.dialog({
-      controller: 'NewCtrl',
+      controller: 'ModalCtrl',
       templateUrl: 'modals/new_customer.html',
       resolve: {item: itemToAdd}
     })
@@ -148,7 +148,7 @@ app.controller('UserController', function ($scope, dataService, genderMap, getNe
     var itemToEdit = customer;
     
     $dialog.dialog({
-        controller: 'EditCtrl',
+        controller: 'ModalCtrl',
         templateUrl: 'modals/edit_customer.html',
         resolve: {item: angular.copy(itemToEdit)}
       })
@@ -185,37 +185,15 @@ app.controller('UserController', function ($scope, dataService, genderMap, getNe
 
 });
 
-// CRU(D) Controllers for modal dialogs
-// better with modal directive?
-app.controller('NewCtrl', function ($scope, item, dialog) { 
+
+app.controller('ModalCtrl', function ($scope, item, dialog) { 
   
   $scope.item = item;
   
-  $scope.addCustomer = function () {
+  $scope.save = function () {
     dialog.close($scope.item);
   };
   
-  $scope.close = function () {
-    dialog.close(undefined);
-  };
-});
-
-app.controller('EditCtrl', function ($scope, item, dialog) { 
-  $scope.item = item;
-  
-  $scope.saveCustomer = function () {
-    dialog.close($scope.item);
-  };
-  
-  $scope.close = function () {
-    dialog.close(undefined);
-  };
-});
-
-app.controller('ShowCtrl', function ($scope, item, dialog) { 
-  
-  $scope.item = item;
-
   $scope.close = function () {
     dialog.close(undefined);
   };
