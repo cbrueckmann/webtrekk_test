@@ -8,7 +8,7 @@
         <th>Page</th>
         <th>Timestamp</th>
       </tr>
-      <tr ng-repeat="navi in item.navigation | orderBy:'-timestamp'">
+      <tr ng-repeat="navi in item.navigationData | orderBy:'-timestamp'">
         <td>{{navi.pages}}</td>
         <td>{{navi.timestamp}}</td>
       </tr>

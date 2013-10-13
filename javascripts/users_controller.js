@@ -2,62 +2,39 @@
 
 var app = angular.module("TestApp", ['ui.bootstrap']);
 
-// service to inject navigation data into customer
-// TODO: generalize to inject any kind of table into another
-app.service('navigationInjector', function () {
-  var navigationData;
-  navigationData = $storage('navigationData').get();
-
-  // get the navigation data for given user
-  var getNaviOfCustomer = function (customer_id) {
-    var userNavigationData = $.map(navigationData, function (data) {
-      if (data.customer_id === customer_id) {
-        return data;
-      }
-      else {
-        return [];
-      }
-    });
-    return userNavigationData;
-  };
-  
-  // not really sure if this step is necessairy or if a relation could be accomplished in a different way...
-  // walk through each customer, get NavigationData from separate table and inject it to userData
-  var injectNavigationDataToCustomer = function (userData) {
-    $.each(userData, function (i, customer) {
-      var customer_id = customer.customer_id;
-      var customerNavigation = getNaviOfCustomer(customer_id);
-
-      customer = $.extend({}, customer, {navigation: customerNavigation});
-      userData[i] = customer;
-      //saveData();
-    });
-    return userData;
-  };
-
-  return {
-    inject: injectNavigationDataToCustomer,
-    getNavi: getNaviOfCustomer
-  };
-});
-
 // service for data management (localStorage in this case)
 // TODO: check if localStorage && JSON is present here or provide a fallback
-app.service('dataService', ['navigationInjector', function (navigationInjector) {
-  var userData;
+//app.service('dataService', ['dataInjector', function (dataInjector) {
 
-  // init Data
-  userData = $storage('userData').get(); 
-  userData = navigationInjector.inject(userData);
+app.service('dataService', function () {
+  
+  /** 
+  * getRelation()
+  *  
+  *  itemId: The id of the parent data
+  *  relationTable: the name of the relation table
+  *  relationKey: the name of the relation_key representing the parent id
+  */
+  this.getRelation = function (itemId, relationTable, relationKey) {
+    var childData = null;
+    var relationData = $storage(relationTable).get();
 
-  this.get = function () {
-    return userData;
+    childData = $.map(relationData, function (data) {
+      if (data[relationKey] === itemId) {
+        return data;
+      }
+    });
+    return childData
   };
 
-  this.set = function (key, data) {
-    $storage(key).set(data);
+  this.get = function (table) {
+    return $storage(table).get();
   };
-}]);
+
+  this.set = function (table, data) {
+    $storage(table).set(data);
+  };
+});
 
 // Translate short version of gender to human readable
 app.service('genderMap', function () {
@@ -67,13 +44,16 @@ app.service('genderMap', function () {
   };
 });
 
-// determine the next Id for a given key in an array of objects 
-// value of obj.key must be integer
-// note: after adding a user, $scope.nextCustomerId is just incremented
-// could also use underscore _.max(), but would be too much overhead
+/** determine the next Id for a given key in an array of objects 
+* value of obj.key must be integer
+* could also use underscore _.max(), but would be too much overhead
+* dataArray: the array of objects
+* the obj[key] to sort
+*/
 app.service('getNextId', function () {
-  this.get = function (data, key) {
-    var sortArray = angular.copy(data);
+  this.get = function (dataArray, key) {
+    // make a copy so the original Array is not affected
+    var sortArray = angular.copy(dataArray);
     var nextId, maxId;
 
     if (sortArray.length > 0) {
@@ -89,26 +69,28 @@ app.service('getNextId', function () {
     }
 
     return nextId;
-  }
+  };
 });
 
 app.controller('UserController', function ($scope, dataService, genderMap, getNextId, $dialog) {
   $scope.header = "Customer Overview";
   
   // import data from dataService
-  $scope.userData = dataService.get(); 
+  $scope.userData = dataService.get('userData'); 
 
   // store back to database (localstorage)
   // In real world we would first send a request to the server
   // and update the $scope on success
   // also, we would just update a single user, not the entire set
   var saveData = function () {
-    dataService.set('userData', $scope.userData)
+    dataService.set('userData', $scope.userData);
   };
   
   // Customer detail dialog
   $scope.showNaviForCustomer = function (customer) {
-    var itemToShow = customer;
+    var itemToShow = angular.copy(customer);
+    // gather all entries of navigationData for given customer_id
+    itemToShow.navigationData = dataService.getRelation(customer.customer_id, 'navigationData', 'customer_id');
 
     $dialog.dialog({
       controller: 'ModalCtrl',
